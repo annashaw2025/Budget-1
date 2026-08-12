@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Monthly Budget</title>
+<style>
+  :root {
+    --bg:#f3f8ff; --card:#ffffff; --text:#18324a; --muted:#6f8498;
+    --line:#dceaf6; --accent:#3d8fd8; --accent2:#77b9eb;
+    --soft:#eaf4ff; --danger:#d85c68; --success:#42a878;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:linear-gradient(180deg,#edf7ff 0%,#f8fbff 100%);
+    color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  .wrap { max-width:960px; margin:auto; padding:30px 18px 55px; }
+  .hero {
+    background:linear-gradient(135deg,#2f83c9,#66afe6);
+    color:white; border-radius:24px; padding:25px 25px 22px;
+    box-shadow:0 10px 28px rgba(61,143,216,.18); margin-bottom:18px;
+  }
+  h1 { margin:0 0 5px; font-size:31px; letter-spacing:-.5px; }
+  .sub { margin:0; opacity:.9; }
+  .month { margin-top:16px; display:inline-block; background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.3); padding:8px 12px; border-radius:12px; font-size:13px; }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+  .card {
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:17px; box-shadow:0 5px 18px rgba(42,96,138,.06);
+  }
+  .label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+  .big { font-size:24px; font-weight:750; margin-top:6px; }
+  .positive { color:var(--success); } .negative { color:var(--danger); }
+  section {
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:20px; margin-top:14px; box-shadow:0 5px 18px rgba(42,96,138,.05);
+  }
+  h2 { font-size:19px; margin:0 0 15px; }
+  .form { display:grid; grid-template-columns:1fr 1fr .7fr 1.3fr auto; gap:9px; }
+  input, select, button {
+    font:inherit; border:1px solid #cfe1ef; border-radius:11px; padding:10px 11px;
+    background:#fff; color:var(--text);
+  }
+  input:focus, select:focus { outline:2px solid #b8dcf7; border-color:var(--accent2); }
+  button {
+    cursor:pointer; background:var(--accent); color:white; border:none;
+    font-weight:650; transition:.15s ease;
+  }
+  button:hover { transform:translateY(-1px); background:#287bbd; }
+  button.secondary { background:#e7f2fb; color:#275a7d; }
+  .budget-row { margin:15px 0; }
+  .rowtop { display:flex; justify-content:space-between; gap:10px; font-size:14px; }
+  .bar { height:10px; background:#e7f0f7; border-radius:99px; overflow:hidden; margin-top:7px; }
+  .fill { height:100%; background:linear-gradient(90deg,#5aa7df,#3d8fd8); border-radius:99px; }
+  .fill.over { background:var(--danger); }
+  .transactions { width:100%; border-collapse:collapse; font-size:14px; }
+  .transactions th,.transactions td { text-align:left; padding:10px 6px; border-bottom:1px solid var(--line); }
+  .transactions th { color:var(--muted); font-size:11px; text-transform:uppercase; }
+  .delete { background:none; color:var(--danger); padding:4px 7px; }
+  .delete:hover { background:#fff0f2; transform:none; }
+  .actions { display:flex; gap:8px; margin-top:12px; }
+  .note { color:var(--muted); font-size:13px; line-height:1.5; margin-top:10px; }
+  .budget-title { display:flex; justify-content:space-between; align-items:center; }
+  .badge { background:var(--soft); color:#3477a8; border-radius:999px; padding:5px 9px; font-size:12px; }
+  @media(max-width:700px) {
+    .grid { grid-template-columns:repeat(2,1fr); }
+    .form { grid-template-columns:1fr 1fr; }
+    .form button { grid-column:1/-1; }
+  }
+  @media(max-width:480px) {
+    .wrap { padding:18px 12px 40px; }
+    .grid { grid-template-columns:1fr 1fr; }
+    .card { padding:13px; }
+    .big { font-size:20px; }
+    .transactions { font-size:12px; }
+    .transactions th:nth-child(3), .transactions td:nth-child(3) { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Our Monthly Budget 💙</h1>
+    <p class="sub">A simple way to keep track of every purchase and stay on budget.</p>
+    <div class="month">Monthly limit • $3,700</div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div class="label">Monthly income</div><div class="big">$3,700</div></div>
+    <div class="card"><div class="label">Budgeted spending</div><div class="big" id="budgeted">$3,700</div></div>
+    <div class="card"><div class="label">Spent this month</div><div class="big" id="spent">$0</div></div>
+    <div class="card"><div class="label">Left to spend</div><div class="big positive" id="left">$3,700</div></div>
+  </div>
+
+  <section>
+    <h2>Add a purchase</h2>
+    <div class="form">
+      <input id="date" type="date">
+      <select id="category"></select>
+      <input id="amount" type="number" step="0.01" min="0" placeholder="Amount">
+      <input id="description" type="text" placeholder="What was it? (optional)">
+      <button onclick="addPurchase()">Add purchase</button>
+    </div>
+    <div class="note">Each category has a monthly limit. There is <strong>no rollover</strong> from one month to the next. Purchases are saved in this browser automatically.</div>
+  </section>
+
+  <section>
+    <h2>Budget progress</h2>
+    <div id="budgetList"></div>
+  </section>
+
+  <section>
+    <h2>Purchases</h2>
+    <div id="transactionArea"></div>
+    <div class="actions">
+      <button class="secondary" onclick="clearAll()">Clear all purchases</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const budgets = {
+  "Rent":1616,
+  "Wi-Fi":80,
+  "Gas/Electric":100,
+  "Car Insurance":150.20,
+  "Phone":35.93,
+  "TV":33.32,
+  "Netflix":9.99,
+  "Gym Membership":50,
+  "Gas — Anna":75,
+  "Gas — Kameron":75,
+  "Groceries":500,
+  "Eating Out/Coffee":150,
+  "Shopping/Fun":150,
+  "Savings":500,
+  "Miscellaneous/Buffer":175
+};
+
+let purchases = JSON.parse(localStorage.getItem("ourBudgetPurchases") || "[]");
+
+const cat = document.getElementById("category");
+Object.keys(budgets).forEach(c => {
+  const o = document.createElement("option"); o.value=c; o.textContent=c; cat.appendChild(o);
+});
+document.getElementById("date").valueAsDate = new Date();
+
+function money(n){ return n.toLocaleString("en-US",{style:"currency",currency:"USD"}); }
+
+function addPurchase(){
+  const amount = Number(document.getElementById("amount").value);
+  const category = document.getElementById("category").value;
+  const description = document.getElementById("description").value.trim();
+  const date = document.getElementById("date").value;
+  if(!amount || amount <= 0 || !date) return alert("Please enter a date and amount.");
+  purchases.push({id:Date.now(), amount, category, description, date});
+  save(); document.getElementById("amount").value=""; document.getElementById("description").value="";
+}
+
+function save(){ localStorage.setItem("ourBudgetPurchases", JSON.stringify(purchases)); render(); }
+
+function deletePurchase(id){ purchases=purchases.filter(p=>p.id!==id); save(); }
+
+function clearAll(){
+  if(confirm("Delete every purchase currently saved in this app?")) { purchases=[]; save(); }
+}
+
+function render(){
+  const spent = purchases.reduce((s,p)=>s+p.amount,0);
+  document.getElementById("spent").textContent=money(spent);
+  const left=3700-spent;
+  const leftEl=document.getElementById("left");
+  leftEl.textContent=money(left);
+  leftEl.className="big "+(left>=0?"positive":"negative");
+
+  const list=document.getElementById("budgetList");
+  list.innerHTML="";
+  Object.entries(budgets).forEach(([c,b])=>{
+    const used=purchases.filter(p=>p.category===c).reduce((s,p)=>s+p.amount,0);
+    const remaining=b-used, pct=Math.min((used/b)*100,100);
+    list.innerHTML += `<div class="budget-row">
+      <div class="rowtop"><span><strong>${c}</strong></span><span>${money(used)} / ${money(b)} ${remaining<0?`(${money(Math.abs(remaining))} over)`:``}</span></div>
+      <div class="bar"><div class="fill ${remaining<0?'over':''}" style="width:${pct}%"></div></div>
+    </div>`;
+  });
+
+  const area=document.getElementById("transactionArea");
+  if(!purchases.length){ area.innerHTML='<div class="note">No purchases yet. Add your first one above!</div>'; return; }
+  const sorted=[...purchases].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  area.innerHTML=`<table class="transactions"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead><tbody>
+    ${sorted.map(p=>`<tr><td>${p.date}</td><td>${p.category}</td><td>${p.description||"—"}</td><td>${money(p.amount)}</td><td><button class="delete" onclick="deletePurchase(${p.id})">Delete</button></td></tr>`).join("")}
+  </tbody></table>`;
+}
+render();
+</script>
+</body>
+</html>
